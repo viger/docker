@@ -38,19 +38,23 @@ RUN echo -e "Server = http://mirrors.163.com/archlinux/\$repo/os/\$arch" > /etc/
             extra/php-xsl \
             extra/memcached \
             community/redis \
+            htop \
     && pacman --noconfirm -Sc \
     && useradd -G users -m -p "$6$MUMyGSiy$7F1sknUTZ6hQFzuPxLMV2YhrvYPdxiAXfliqwqhjbM.UeCu8MuYez0mGc0Phk3rLSJkUApxrhpPIpUbTc8G631" tom \
-    && echo "tom ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    && echo "tom ALL=(ALL:ALL) ALL" >> /etc/sudoers \
+    && /usr/bin/ssh-keygen -A
 
-VOLUME /home/vhosts
+VOLUME /data
 
-RUN mkdir -p /home/vhosts \
-    && ln -s /home/vhosts /home/tom/vhosts
+RUN mkdir -p /data/vhosts \
+    && ln -s /data/vhosts /home/tom/vhosts \
+    && mkdir -p /etc/nginx/vhost
 
 ADD confs/start    /etc/init.d/start
 RUN chmod a+x /etc/init.d/start
 ADD confs/smb.conf /etc/samba/smb.conf
-ADD confs/nginx/*  /etc/nginx/
+ADD confs/nginx/*.conf  /etc/nginx/
+ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
 ADD confs/php56/php.ini /etc/php/php.ini
 ADD confs/php56/php-fpm.conf /etc/php/php-fpm.conf
 ADD confs/php56/conf.d/*  /etc/php/conf.d/
@@ -59,6 +63,6 @@ ADD confs/sync_database.sh /home/tom/sync_database.sh
 
 EXPOSE 22 80 137 455
 
-CMD /etc/init.d/start
+# CMD /etc/init.d/start
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT /etc/init.d/start

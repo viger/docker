@@ -1,16 +1,22 @@
-#/bin/bash
+#!/bin/bash
 
 sleep 30
 
-[ ! -d "/home/vhosts/default" ] && \
-    mkdir -p /home/vhosts/default/logs \
-    && mkdir -p /home/vhosts/default/public
+[ ! -d "/data/vhosts/default" ] \
+    && mkdir -p /data/vhosts/default/logs \
+    && mkdir -p /data/vhosts/default/public
 
-chown tom:tom -R /home/vhosts
+[ ! -d "/data/mysql" ] \
+    && mkdir -p /data/mysql \
+    && /usr/bin/mysql_install_db --user=mysql --basedir=/usr/ --datadir=/data/mysql
 
-/usr/bin/sshd -D
-/usr/bin/nginx -c /etc/nginx/nginx.conf
-/usr/bin/php-fpm -c /etc/php/php.ini
-/usr/bin/redis-server /etc/redis.conf
-/usr/bin/memcached -l 127.0.0.1 -o modern
-/usr/bin/mysqld -u root &
+chown tom:users -R /data/vhosts
+
+[ -x "/usr/bin/sshd" ] && /usr/bin/sshd -D
+[ -x "/usr/bin/smbd" ] && /usr/bin/smbd
+[ -x "/usr/bin/nmbd" ] && /usr/bin/nmbd
+[ -x "/usr/bin/nginx" ] && /usr/bin/nginx -c /etc/nginx/nginx.conf
+[ -x "/usr/bin/php-fpm" ] && /usr/bin/php-fpm -c /etc/php/php.ini
+[ -x "/usr/bin/redis-server" ] && /usr/bin/redis-server /etc/redis.conf
+[ -x "/usr/bin/memcached" ] && /usr/bin/memcached -l 127.0.0.1 -o modern -u root &
+[ -x "/usr/bin/mysqld" ] && /usr/bin/mysqld -u root &

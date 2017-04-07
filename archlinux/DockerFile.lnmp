@@ -1,11 +1,12 @@
 FROM archlinux
 MAINTAINER tom chen <viger@mchen.info>
 
-RUN /bin/bash -c echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os/\$arch" >> /etc/pacman.d/mirrorlist \
-    && /bin/bash -c echo -e "\n[archlinuxcn]\nSigLevel = Optional TrustedOnly\nServer = http://mirrors.163.com/archlinux-cn/\$arch" >> /etc/pacman.conf \
+RUN echo -e "Server = http://mirrors.163.com/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist \
+    && echo -e "\n[archlinuxcn]\nSigLevel = Optional TrustedOnly\nServer = http://mirrors.163.com/archlinux-cn/\$arch" >> /etc/pacman.conf \
     && pacman -Syyu --noconfirm \
     && pacman-db-upgrade \
-    && pacman -S --noconfirm archlinuxcn/yaourt \
+    && pacman -S --noconfirm \
+            archlinuxcn/yaourt \
             extra/nginx \
             extra/mariadb \
             extra/samba \
@@ -13,52 +14,53 @@ RUN /bin/bash -c echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os
             extra/vim \
             core/sudo \
             extra/zsh \
-    && yaourt -S --noconfirm  aur/php56 \
-            aur/php56-apache \
-            aur/php56-cgi \
-            aur/php56-dblib \
-            aur/php56-embed \
-            aur/php56-enchant \
-            aur/php56-fpm \
-            aur/php56-gd \
-            aur/php56-imap \
-            aur/php56-intl \
-            aur/php56-ldap \
-            aur/php56-mcrypt \
-            aur/php56-memcache \
-            aur/php56-odbc \
-            aur/php56-pear \
-            aur/php56-pgsql \
-            aur/php56-phpdbg \
-            aur/php56-pspell \
-            aur/php56-snmp \
-            aur/php56-sqlite \
-            aur/php56-tidy \
-            aur/php56-xdebug \
-            aur/php56-xsl \
-            aur/php56-mssql \
+            extra/php \
+            extra/php-cgi \
+            extra/php-dblib \
+            extra/php-embed \
+            extra/php-enchant \
+            extra/php-fpm \
+            extra/php-gd \
+            extra/php-imap \
+            extra/php-intl \
+            extra/php-ldap \
+            extra/php-mcrypt \
+            community/php-memcache \
+            community/php-mongodb \
+            extra/php-odbc \
+            extra/php-pgsql \
+            extra/php-phpdbg \
+            extra/php-pspell \
+            extra/php-snmp \
+            extra/php-sqlite \
+            extra/php-tidy \
+            community/xdebug \
+            extra/php-xsl \
+            extra/memcached \
+            community/redis \
+    && pacman --noconfirm -Sc \
     && useradd -G users -m -p "$6$MUMyGSiy$7F1sknUTZ6hQFzuPxLMV2YhrvYPdxiAXfliqwqhjbM.UeCu8MuYez0mGc0Phk3rLSJkUApxrhpPIpUbTc8G631" tom \
     && echo "tom ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 VOLUME /home/vhosts
 
-RUN mkdir -p /home/vhosts/default/logs \
-    && mkdir -p /home/vhosts/default/public \
-    && mkdir -p /home/vhosts/bugfix_devp/logs \
-    && mkdir -p /home/vhosts/bugfix_devp/public \
-    && mkdir -p /home/vhosts/bugfix_devp/svn_branchs \
+RUN mkdir -p /home/vhosts \
     && ln -s /home/vhosts /home/tom/vhosts \
-    && chown tom:tom -R /home/vhosts
+    && mkdir -p /etc/nginx/vhost
 
+ADD confs/start    /etc/init.d/start
+RUN chmod a+x /etc/init.d/start
 ADD confs/smb.conf /etc/samba/smb.conf
-ADD confs/nginx/*  /etc/nginx/
-ADD confs/php56/php.ini /etc/php56/php.ini
-ADD confs/php56/php-fpm.conf /etc/php56/php-fpm.conf
-ADD confs/php56/conf.d/*  /etc/php56/conf.d/
+ADD confs/nginx/*.conf  /etc/nginx/
+ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
+ADD confs/php56/php.ini /etc/php/php.ini
+ADD confs/php56/php-fpm.conf /etc/php/php-fpm.conf
+ADD confs/php56/conf.d/*  /etc/php/conf.d/
 ADD confs/branch.sh /home/tom/branch.sh
 ADD confs/sync_database.sh /home/tom/sync_database.sh
 
-RUN systemctl enable smbd nmbd php56-fpm nginx mariadb
+EXPOSE 22 80 137 455
 
-EXPOSE 22:10022 80:10080 137:10137 455:10445
-ENTRYPOINT ["top", "-b"]
+# CMD /etc/init.d/start
+
+ENTRYPOINT /etc/init.d/start
