@@ -1,14 +1,19 @@
 #!/bin/bash
 
-sleep 30
+sleep 3
 
 [ ! -d "/data/vhosts/default" ] \
     && mkdir -p /data/vhosts/default/logs \
-    && mkdir -p /data/vhosts/default/public
+    && mkdir -p /data/vhosts/default/public \
+    && echo -e "<?php\nphpinfo();" > /data/vhosts/default/public/info.php
 
 [ ! -d "/data/mysql" ] \
     && mkdir -p /data/mysql \
-    && /usr/bin/mysql_install_db --user=mysql --basedir=/usr/ --datadir=/data/mysql
+    && /usr/bin/mysql_install_db --user=mysql --basedir=/usr/ --datadir=/data/mysql \
+    && [ -x "/usr//bin/mysqladmin" ] && /usr//bin/mysqladmin -u root password '123qwe'
+
+[ ! -d "/var/log/php/" ] \
+    && mkdir -p /var/log/php/
 
 chown tom:users -R /data/vhosts
 
@@ -17,6 +22,7 @@ chown tom:users -R /data/vhosts
 [ -x "/usr/bin/nmbd" ] && /usr/bin/nmbd
 [ -x "/usr/bin/nginx" ] && /usr/bin/nginx -c /etc/nginx/nginx.conf
 [ -x "/usr/bin/php-fpm" ] && /usr/bin/php-fpm -c /etc/php/php.ini
-[ -x "/usr/bin/redis-server" ] && /usr/bin/redis-server /etc/redis.conf
+[ -x "/usr/bin/php56-fpm" ] && /usr/bin/php56-fpm -c /etc/php56/php.ini
+[ -x "/usr/bin/redis-server" ] && /usr/bin/redis-server /etc/redis.conf &
 [ -x "/usr/bin/memcached" ] && /usr/bin/memcached -l 127.0.0.1 -o modern -u root &
 [ -x "/usr/bin/mysqld" ] && /usr/bin/mysqld -u root &
