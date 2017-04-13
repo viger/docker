@@ -50,8 +50,8 @@ RUN echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os/\$arch" > /e
     && pacman --noconfirm -Sc \
     && useradd -G users -m -p "\$6\$BLzY/AKcZQbH3m0H\$ZWZVwfjwxMHGC4PwI9SMlqritnq6TcPiaPI13CKjc7CKPhXkiGBINCKvr1V41DVZW0LpRwbs/qW4RZci1fV5H0" tom \
     && echo "tom ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers \
-#    && rm -f /etc/localtime \
-#    && ln -s /usr/share/Asia/Shanghai /etc/localtime \
+    && rm -f /etc/localtime \
+    && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && /usr/bin/ssh-keygen -A \
     && echo -e "zh_CN.GB18030 GB18030\nzh_CN.GBK GBK\nzh_CN.UTF-8 UTF-8\nzh_CN GB2312" >> /etc/locale.gen \
     && locale-gen \
@@ -82,7 +82,7 @@ RUN mkdir -p /data/vhosts \
 ADD confs/start    /etc/init.d/start
 RUN chmod a+x /etc/init.d/start
 ADD confs/smb.conf /etc/samba/smb.conf
-ADD confs/my.conf /etc/mysql/my.conf
+ADD confs/my.cnf /etc/mysql/my.cnf
 ADD confs/nginx/*.conf  /etc/nginx/
 ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
 ADD confs/php56/php.ini /etc/php56/php.ini
