@@ -1,13 +1,13 @@
 #!/bin/bash
 SELF_NAME=$(basename $0)
-DEFAULT_USER='tom'
+DEFAULT_USER='viger'
 DOCKER_TAG="docker:$(date +"%s%N")"
 
 UNKOWN_TPL=$(cat <<EOF
 Unkown argument: __ARG__, script exit.\n
 \n
 $0 is support args like this:\n
-$0 [php|php56] nosmb
+$0 [php|php56] nosmb -utom -tarch:lnmp
 EOF
 )
 
