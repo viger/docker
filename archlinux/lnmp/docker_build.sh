@@ -81,10 +81,12 @@ exec_smb() {
     local sc=$SAMABA_CONF_TPL
     local sca=' nmbd smbd'
     local scc=" ' ' ' '"
-    [ "nosmb" == "$1" ] && si='' && sc='' && sca='' && scc=''
+    local scp='137 139 445 '
+    [ "nosmb" == "$1" ] && si='' && sc='' && sca='' && scc='' && scp=''
 
     exec_replace_tpl '__SAMBA_INSTALL__' "$si"
     exec_replace_tpl '__SAMABA_CONF__' "$sc"
+    exec_replace_tpl '__SMB_PORT__' "$scp"
     exec_replace_tpl '__START_SCRIPT_SMB_APPS__' "$sca" "confs/start"
     exec_replace_tpl '__START_SCRIPT_SMB_CONFS__' "$scc" "confs/start"
 }

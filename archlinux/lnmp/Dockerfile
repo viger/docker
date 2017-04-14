@@ -60,7 +60,7 @@ ADD confs/php/conf.d/*  /etc/__PHP_VERSION__/conf.d/
 ADD confs/branch.sh /home/__DEFAULT_USER__/branch.sh
 ADD confs/sync_database.sh /home/__DEFAULT_USER__/sync_database.sh
 
-EXPOSE 22 80 137 139 445 3306
+EXPOSE 22 80 __SMB_PORT__3306
 
 # CMD /etc/init.d/start
 
