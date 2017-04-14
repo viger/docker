@@ -13,34 +13,11 @@ RUN echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os/\$arch" > /e
             core/libpcap \
             core/patch \
             extra/nginx \
-            extra/mariadb \
-            extra/samba \
+            extra/mariadb \__SAMBA_INSTALL__
             core/openssh \
             extra/vim \
             core/sudo \
-            extra/zsh \
-#            extra/php \
-#            extra/php-cgi \
-#            extra/php-dblib \
-#            extra/php-embed \
-#            extra/php-enchant \
-#            extra/php-fpm \
-#            extra/php-gd \
-#            extra/php-imap \
-#            extra/php-intl \
-#            extra/php-ldap \
-#            extra/php-mcrypt \
-#            community/php-memcache \
-#            community/php-mongodb \
-#            extra/php-odbc \
-#            extra/php-pgsql \
-#            extra/php-phpdbg \
-#            extra/php-pspell \
-#            extra/php-snmp \
-#            extra/php-sqlite \
-#            extra/php-tidy \
-#            community/xdebug \
-#            extra/php-xsl \
+            extra/zsh \__PHP_INSTALL__
             extra/memcached \
             community/redis \
             htop \
@@ -48,49 +25,39 @@ RUN echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os/\$arch" > /e
             binutils \
             git \
     && pacman --noconfirm -Sc \
-    && useradd -G users -m -p "\$6\$BLzY/AKcZQbH3m0H\$ZWZVwfjwxMHGC4PwI9SMlqritnq6TcPiaPI13CKjc7CKPhXkiGBINCKvr1V41DVZW0LpRwbs/qW4RZci1fV5H0" tom \
-    && echo "tom ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers \
+    && useradd -G users -m -p "\$6\$BLzY/AKcZQbH3m0H\$ZWZVwfjwxMHGC4PwI9SMlqritnq6TcPiaPI13CKjc7CKPhXkiGBINCKvr1V41DVZW0LpRwbs/qW4RZci1fV5H0" __DEFAULT_USER__ \
+    && echo "__DEFAULT_USER__ ALL=(ALL:ALL) __NO_PASSWD__ALL" >> /etc/sudoers \
     && rm -f /etc/localtime \
     && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && /usr/bin/ssh-keygen -A \
     && echo -e "zh_CN.GB18030 GB18030\nzh_CN.GBK GBK\nzh_CN.UTF-8 UTF-8\nzh_CN GB2312" >> /etc/locale.gen \
     && locale-gen \
     && echo LANG="en_US.UTF-8" > /etc/locale.conf
-RUN su - tom -c 'gpg --recv-key C2BF0BC433CFC8B3 && yaourt -Sy --noconfirm php56 php56-imagick php56-memcache php56-xdebug' \
-    && git clone https://github.com/phpredis/phpredis.git \
-    && cd phpredis \
-    && /usr/bin/phpize56 \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -rf phpredis
+__PHP56_INSTALL__
 
 VOLUME /data
 
 RUN mkdir -p /data/vhosts \
-    && ln -s /data/vhosts /home/tom/vhosts \
+    && ln -s /data/vhosts /home/__DEFAULT_USER__/vhosts \
     && mkdir -p /etc/nginx/vhost \
     && mkdir -p /var/run/nginx \
-    && mkdir -p /var/run/php-fpm \
-#    && mkdir -p /var/log/php \
-    && mkdir -p /var/log/php56 \
-    && mkdir -p /var/log/nginx  \
-#    && chown -R tom:users /var/log/php \
-    && chown -R tom:users /var/log/php56
+    && mkdir -p /var/log/nginx \
+    && mkdir -p /var/log/__PHP_VERSION__ \
+    && mkdir -p /var/run/__PHP_VERSION__-fpm \
+    && chown -R __DEFAULT_USER__:users /var/log/__PHP_VERSION__
+
 
 ADD confs/start    /etc/init.d/start
 RUN chmod a+x /etc/init.d/start
-ADD confs/smb.conf /etc/samba/smb.conf
-ADD confs/my.cnf /etc/mysql/my.cnf
+__SAMABA_CONF__
+ADD confs/my.conf /etc/mysql/my.conf
 ADD confs/nginx/*.conf  /etc/nginx/
 ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
-ADD confs/php56/php.ini /etc/php56/php.ini
-ADD confs/php56/php-fpm.conf /etc/php56/php-fpm.conf
-ADD confs/php56/conf.d/*  /etc/php56/conf.d/
-# ADD confs/php/php.ini /etc/php/php.ini
-# ADD confs/php/php-fpm.conf /etc/php/php-fpm.conf
-# ADD confs/php/conf.d/*  /etc/php/conf.d/
+ADD confs/php/php.ini /etc/__PHP_VERSION__/php.ini
+ADD confs/php/php-fpm.conf /etc/__PHP_VERSION__/php-fpm.conf
+ADD confs/php/conf.d/*  /etc/__PHP_VERSION__/conf.d/
+ADD confs/branch.sh /home/__DEFAULT_USER__/branch.sh
+ADD confs/sync_database.sh /home/__DEFAULT_USER__/sync_database.sh
 
 EXPOSE 22 80 137 139 445 3306
 

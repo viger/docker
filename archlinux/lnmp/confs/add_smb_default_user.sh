@@ -1,5 +1,5 @@
 #!/bin/bash
-user='__USER__'
+user='starcor'
 
 hash smbpasswd &>/dev/null || {
     echo "has not smbpasswd.exit"
