@@ -13,4 +13,4 @@
 |1|archlinux/mkimage-arch.sh|archlinux||生成一个archlinux的基础镜像。|2017-04-07|
 |2|archlinux/lnmp/docker_build.sh|archlinux||使用脚本生成一个nginx + php(可选php5.6.30版本或最新7.x.x) + mysql + samba[可选]的镜像。|2017-04-14|
 
-如果在使用中有问题，请[mailto:vigerchan@gmail.com](联系我).
+如果在使用中有问题，请[联系我](mailto:vigerchan@gmail.com).
