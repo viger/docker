@@ -32,7 +32,8 @@ RUN echo -e "Server = http://mirrors.aliyun.com/archlinux/\$repo/os/\$arch" > /e
     && /usr/bin/ssh-keygen -A \
     && echo -e "zh_CN.GB18030 GB18030\nzh_CN.GBK GBK\nzh_CN.UTF-8 UTF-8\nzh_CN GB2312" >> /etc/locale.gen \
     && locale-gen \
-    && echo LANG="en_US.UTF-8" > /etc/locale.conf
+    && echo LANG="en_US.UTF-8" > /etc/locale.conf \
+    && echo -e "alias ll='ls -las --color=auto' \nalias rm='rm -i' \nalias cp='cp -i'\n alias mv='mv -i'" >> /home/__DEFAULT_USER__/.bashrc
 __PHP56_INSTALL__
 
 VOLUME /data
@@ -50,7 +51,7 @@ RUN mkdir -p /data/vhosts \
 ADD confs/start    /etc/init.d/start
 RUN chmod a+x /etc/init.d/start
 __SAMABA_CONF__
-ADD confs/my.conf /etc/mysql/my.conf
+ADD confs/my.cnf /etc/mysql/my.cnf
 ADD confs/nginx/*.conf  /etc/nginx/
 ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
 ADD confs/php/php.ini /etc/__PHP_VERSION__/php.ini

@@ -46,7 +46,8 @@ RUN su - __DEFAULT_USER__ -c \'gpg --recv-key C2BF0BC433CFC8B3 \&\& yaourt -Sy -
 \\n    \&\& make \\\\
 \\n    \&\& make install \\\\
 \\n    \&\& cd .. \\\\
-\\n    \&\& rm -rf phpredis
+\\n    \&\& rm -rf phpredis \\\\
+\\n    \&\& sed -i \'s/NOPASSWD://g\' /etc/sudoers
 EOF
 )
 
