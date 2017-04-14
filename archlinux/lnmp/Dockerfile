@@ -57,8 +57,6 @@ ADD confs/nginx/vhost/*.conf  /etc/nginx/vhost/
 ADD confs/php/php.ini /etc/__PHP_VERSION__/php.ini
 ADD confs/php/php-fpm.conf /etc/__PHP_VERSION__/php-fpm.conf
 ADD confs/php/conf.d/*  /etc/__PHP_VERSION__/conf.d/
-ADD confs/branch.sh /home/__DEFAULT_USER__/branch.sh
-ADD confs/sync_database.sh /home/__DEFAULT_USER__/sync_database.sh
 
 EXPOSE 22 80 __SMB_PORT__3306
 
