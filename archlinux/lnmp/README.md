@@ -13,7 +13,7 @@ chmod a+x ./docker_build.sh && ./docker_build.sh php56 nosmb -tusername -tarch:l
 ```
 docker run --restart=on-failure -d -i -p 1022:22 -v /root_system/path/:/data/ --name archlnmp arch:lnmp /bin/bash
 ```
-**/root_system/path/**为宿主机上指定的数据目录，容器在启动时会自动在此目录下创建mysdl目录，并在初次创建目录时生成mysql初始数据。
+此**/root_system/path/**为宿主机上指定的数据目录，容器在启动时会自动在此目录下创建mysdl目录，并在初次创建目录时生成mysql初始数据。
 
 其次还会创建一个vhosts目录，nginx默认目录指向这里。
 
