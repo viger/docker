@@ -74,6 +74,7 @@ exec_php56() {
     exec_replace_tpl '__PHP56_INSTALL__' "$PHP56_INSTALL_TPL"
     exec_replace_tpl '__PHP_INSTALL__' ''
     echo 'extension = redis.so' > confs/php/conf.d/redis.ini
+    sed -i 's/;extension=mysql.so/extension=mysql.so/' confs/php/php.ini
 }
 
 exec_smb() {
