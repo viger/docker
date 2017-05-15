@@ -1,0 +1,43 @@
+#!/bin/bash
+# this is a script of bootstartup by tom chan <viger@mchen.info>.
+# please do not modify or delete it.
+##
+
+STARTUP_APPS=(ssh ntp cron nginx mysql redis-server memcached)
+DIR_BASE_PATH="/data/"
+
+sleep 3
+
+check_or_create_app_dirs() {
+    [ ! -d "${DIR_BASE_PATH}mysql" ] \
+        && mkdir -p "${DIR_BASE_PATH}mysql" \
+        && chown mysql:mysql -R "${DIR_BASE_PATH}mysql" \
+        && /usr/bin/mysql_install_db
+
+    [ ! -d "${DIR_BASE_PATH}vhosts\default\logs" ] \
+        && mkdir -p "${DIR_BASE_PATH}vhosts\default\logs" \
+        && mkdir -p "${DIR_BASE_PATH}vhosts\default\public" \
+        && chown __DEFAULT_USER__:users -R "${DIR_BASE_PATH}vhosts"
+}
+
+exec_run_app() {
+    for app in "${STARTUP_APPS[@]}"; do
+        echo_info "starting $app"
+        /etc/init.d/$app start
+        echo_info "started $app"
+    done
+}
+
+exec_run_php() {
+    echo_info "starting php-fpm56"
+    /usr/sbin/php-fpm56
+    echo_info "started php-fpm56"
+}
+
+echo_info() {
+    [ ! -z "$1" ] && echo "[$(date +"%Y-%m-%d %T")] $1"
+}
+
+check_or_create_app_dirs
+exec_run_app
+exec_run_php
