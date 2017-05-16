@@ -5,6 +5,7 @@ CONTAINER_USER='tom'
 CONTAINER_IMG_NAME='ubuntu:lnmp'
 CONTAINER_PORTS=''
 CONTAINER_VOLUMN_IDX=0
+CONTAINER_VOLUMN_IDX_IN=0
 CONTAINER_VOLUMN_PATH='/data/docker/volumes/'
 CONTAINER_VOLUMN_CURRENT_PATH=''
 CONTAINER_VOLUMN_IDX_PATH="${CONTAINER_VOLUMN_PATH}.idx"
@@ -38,6 +39,10 @@ exec_set_config() {
     done
 
     [ ! -z "$CONTAINER_PORTS" ] && CONTAINER_PORTS=($CONTAINER_PORTS)
+
+    local volume_idx=$(get_container_volumn_path_idx)
+    read -p "[$(date +"%Y-%m-%d %T")] please entry a volumn's idx[$volume_idx] which used by container[$CONTAINER_NAME]:" c_volume_idx
+    [ ! -z "$c_volume_idx" ] && CONTAINER_VOLUMN_IDX=$(expr $c_volume_idx - 1) && CONTAINER_VOLUMN_IDX_IN=1
 }
 
 exist_container() {
@@ -69,7 +74,7 @@ exec_create() {
         run_cmd="$run_cmd -p $port"
     done
 
-    CONTAINER_VOLUMN_IDX=$(get_container_volumn_path_idx)
+    [ $CONTAINER_VOLUMN_IDX -eq 0 ] && CONTAINER_VOLUMN_IDX=$(get_container_volumn_path_idx)
     CONTAINER_VOLUMN_CURRENT_PATH=$(get_container_volumn_path $CONTAINER_VOLUMN_IDX)
     run_cmd="$run_cmd -v $CONTAINER_VOLUMN_CURRENT_PATH:/data/"
     [ ! -z "$CONTAINER_NAME" ] && run_cmd="$run_cmd --name=$CONTAINER_NAME"
@@ -79,6 +84,8 @@ exec_create() {
     local run_result=`$run_cmd`
     echo_info $run_result
     echo_info "created the container which named $CONTAINER_NAME."
+    echo_info "wait 3 seconds to change user."
+    sleep 3
 
     change_user
 
@@ -92,26 +99,28 @@ add_smb() {
 
     if [ -z "$user_info" ]; then
         useradd -M -N -u $uid -g 100 -s /sbin/nologin  $CONTAINER_USER
-        chown -R $uid:100 $CONTAINER_VOLUMN_CURRENT_PATH
+        chown $uid:100 $CONTAINER_VOLUMN_CURRENT_PATH
     fi
 
     smbpasswd -a $CONTAINER_USER
 
-    local smb_conf=$(cat <<EOF
+    local smb_start_line=$(grep -rn "\[$CONTAINER_USER\]" /etc/samba/smb.conf  | awk -F: '{print $1}')
+    if [ -z "$smb_start_line" ]; then
+        local smb_conf=$(cat <<EOF
 \n[${CONTAINER_USER}]
 \n\tcomment = ${CONTAINER_USER} directory
-\n   path = ${CONTAINER_VOLUMN_CURRENT_PATH}/vhosts/
-\n   valid users = ${CONTAINER_USER}
-\n   public = no
-\n   writable = yes
-\n   browseable = yes
-\n   create mask = 0755
-\n   printable = no
+\n\tpath = ${CONTAINER_VOLUMN_CURRENT_PATH}/vhosts/
+\n\tvalid users = ${CONTAINER_USER}
+\n\tpublic = no
+\n\twritable = yes
+\n\tbrowseable = yes
+\n\tcreate mask = 0755
+\n\tprintable = no
 
 EOF
 )
-
-    echo -e $smb_conf >> /etc/samba/smb.conf;
+        echo -e $smb_conf >> /etc/samba/smb.conf;
+    fi
 
     /etc/init.d/nmb restart
     /etc/init.d/smb restart
@@ -124,6 +133,9 @@ change_user() {
         local uid=$(expr $volume_idx + 600)
         local change_user_cmd="mv /home/tom /home/$CONTAINER_USER"
         change_user_cmd="$change_user_cmd && sed -i 's/tom/$CONTAINER_USER/g' /etc/sudoers"
+        change_user_cmd="$change_user_cmd && sed -i 's/tom/$CONTAINER_USER/g' /etc/php56/php-fpm.conf"
+        change_user_cmd="$change_user_cmd && sed -i 's/tom/$CONTAINER_USER/g' /etc/nginx/nginx.conf"
+        change_user_cmd="$change_user_cmd && sed -i 's/tom/$CONTAINER_USER/g' /etc/nginx/sites-available/*"
         if [ $uid -gt 600 ]; then
             change_user_cmd="$change_user_cmd && sed -i 's/1000/$uid/' /etc/passwd"
             change_user_cmd="$change_user_cmd && sed -i 's/1000/100/' /etc/passwd"
@@ -169,7 +181,7 @@ get_container_volumn_path() {
     local volumn_path="${CONTAINER_VOLUMN_PATH}volume${path_idx}"
     if [ ! -d "$volumn_path" ]; then
         mkdir -p $volumn_path
-        echo $path_idx > "$CONTAINER_VOLUMN_IDX_PATH"
+        [ $CONTAINER_VOLUMN_IDX_IN -eq 0 ] && echo $path_idx > "$CONTAINER_VOLUMN_IDX_PATH"
         echo $volumn_path
     else
         echo $(get_container_volumn_path ${path_idx})
@@ -205,19 +217,35 @@ exec_run() {
 exec_delete() {
     [ -z "$1" ] && help_info && return
     CONTAINER_NAME=$1
-    local delete_all=$2
 
     local container_id=$(get_container_id_by_name)
     [ -z "$container_id" ] && echo_info "can not find container which named $CONTAINER_NAME" && return
-    [ ! -z "$delete_all" ] && local volume=$(docker inspect -f '{{index .Volumes "/data"}}' $CONTAINER_NAME)
     echo_info "stoping container which named $CONTAINER_NAME."
     docker stop $container_id
     echo_info "stoped container which named $CONTAINER_NAME."
     echo_info "deleting container which named $CONTAINER_NAME."
     docker rm $container_id
-
-    [ ! -z "$delete_all" ] && [ ! -z "$volume" ] && rm -rf $volume
     echo_info "deleted container which named $CONTAINER_NAME."
+}
+
+exec_delete_all() {
+    [ -z "$1" ] && help_info && return
+    CONTAINER_NAME=$1
+    local user=$2
+    local samba_conf_end=313
+    local volume=$(docker inspect -f '{{index .Volumes "/data"}}' $CONTAINER_NAME)
+    exec_delete $1
+
+    [ ! -z "$volume" ] && rm -rf $volume && echo_info "deleted volume: $volume."
+    [ ! -z "$user" ] && [ ! -z "$(grep $user /etc/passwd)" ] && userdel $user  && echo_info "deleted user: $user."
+    local smb_start_line=$(grep -rn "\[$user\]" /etc/samba/smb.conf  | awk -F: '{print $1}')
+    [ -z "$smb_start_line" ] && return
+    smb_start_line=$(expr $smb_start_line - 1 )
+    smb_end_line=$(expr $smb_start_line + 9 )
+    [[ $samba_conf_end -gt $smb_start_line ]] && return
+    [ ! -z "$user" ] && smbpasswd -x $user
+    [ ! -z "$user" ] && sed -i "${smb_start_line},${smb_end_line}d" /etc/samba/smb.conf
+    [ ! -z "$user" ] && echo_info "deleted ${user}'s samba."
 }
 
 help_info() {
@@ -239,6 +267,6 @@ case $1 in
     run|r) exec_run $2;;
     changeuser|cu) exec_change_user $2 $3;;
     delete) exec_delete $2;;
-    delete_all) exec_delete $2 1;;
+    delete_all) exec_delete_all $2 $3;;
     *) help_info ;;
 esac

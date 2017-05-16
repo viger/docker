@@ -5,19 +5,23 @@
 
 STARTUP_APPS=(ssh ntp cron nginx mysql redis-server memcached)
 DIR_BASE_PATH="/data/"
-
-sleep 3
+MYSQL_FRIST_START=0
+LOG_FILE='/tmp/startup.log'
 
 check_or_create_app_dirs() {
-    [ ! -d "${DIR_BASE_PATH}mysql" ] \
-        && mkdir -p "${DIR_BASE_PATH}mysql" \
-        && chown mysql:mysql -R "${DIR_BASE_PATH}mysql" \
-        && /usr/bin/mysql_install_db
-
-    [ ! -d "${DIR_BASE_PATH}vhosts\default\logs" ] \
-        && mkdir -p "${DIR_BASE_PATH}vhosts\default\logs" \
-        && mkdir -p "${DIR_BASE_PATH}vhosts\default\public" \
+    [ ! -d "${DIR_BASE_PATH}vhosts/default/logs" ] \
+        && mkdir -p "${DIR_BASE_PATH}vhosts/default/logs" \
+        && mkdir -p "${DIR_BASE_PATH}vhosts/default/public" \
+        && echo -e "<?php\nphpinfo();" > "${DIR_BASE_PATH}vhosts/default/public/info.php" \
         && chown __DEFAULT_USER__:users -R "${DIR_BASE_PATH}vhosts"
+
+    [ ! -f "/var/run/php-fpm.sock" ] \
+        && echo "" > /var/run/php-fpm.sock \
+        && chown __DEFAULT_USER__:users /var/run/php-fpm.sock
+
+    [ ! -d "${DIR_BASE_PATH}mysql" ] \
+        && /usr/bin/mysql_install_db \
+        && MYSQL_FRIST_START=1
 }
 
 exec_run_app() {
@@ -34,10 +38,17 @@ exec_run_php() {
     echo_info "started php-fpm56"
 }
 
+exec_change_mysql_pwd() {
+    [ $MYSQL_FRIST_START -eq 1 ] && /usr/bin/mysqladmin -u root password '123qwe!'
+}
+
 echo_info() {
-    [ ! -z "$1" ] && echo "[$(date +"%Y-%m-%d %T")] $1"
+    [ ! -z "$1" ] && echo "[$(date +"%Y-%m-%d %T")] $1" >> $LOG_FILE
 }
 
 check_or_create_app_dirs
 exec_run_app
+exec_change_mysql_pwd
 exec_run_php
+
+tail -f $LOG_FILE

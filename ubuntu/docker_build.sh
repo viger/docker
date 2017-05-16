@@ -25,9 +25,13 @@ SSH_LOGIN_INFO=$(cat -s <<EOF
 \\n# passwd someone                                                   #\\
 \\n# 3, clone ur code from server of subversion by the script which   #\\
 \\n# named branch.sh on ur home directory, like this:                 #\\
-\\n# 4, clear this information by this command as root:               #\\
+\\n# ./branch.sh <version>                                            #\\
+\\n# ./branch.sh 5.5.x                                                #\\
+\\n# 4, sync the database from the platform which ip's' 192.168.95.53 #\\
+\\n# ./sync_database.sh                                               #\\
+\\n# 5, clear this information by this command as root:               #\\
 \\n# echo \'\' > /etc/motd                                              #\\
-\\n# 5, set password for mysql by this command at first login:        #\\
+\\n# 6, set password for mysql by this command at first login:        #\\
 \\n# mysqladmin -u root -p password PASSWORD                          #\\
 \\n# and then u must restart it.                                      #\\
 \\n#                                                                  #\\

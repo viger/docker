@@ -101,14 +101,15 @@ RUN cd /root \
     && rm -rf memcache-3.0.8* redis-3.1.2*
 
 # add user & set timezone & language && alias for user
-RUN useradd -G users -m -p "\$6\$BLzY/AKcZQbH3m0H\$ZWZVwfjwxMHGC4PwI9SMlqritnq6TcPiaPI13CKjc7CKPhXkiGBINCKvr1V41DVZW0LpRwbs/qW4RZci1fV5H0" __DEFAULT_USER__ \
+RUN useradd -G users -m -p "\$6\$BLzY/AKcZQbH3m0H\$ZWZVwfjwxMHGC4PwI9SMlqritnq6TcPiaPI13CKjc7CKPhXkiGBINCKvr1V41DVZW0LpRwbs/qW4RZci1fV5H0" -s /bin/bash __DEFAULT_USER__ \
     && echo "__DEFAULT_USER__ ALL=(ALL:ALL) ALL" >> /etc/sudoers \
     && rm -f /etc/localtime \
     && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo -e "zh_CN.GB18030 GB18030\nzh_CN.GBK GBK\nzh_CN.UTF-8 UTF-8\nzh_CN GB2312" >> /etc/locale.gen \
+    && echo "zh_CN.GB18030 GB18030\nzh_CN.GBK GBK\nzh_CN.UTF-8 UTF-8\nzh_CN GB2312" >> /etc/locale.gen \
     && locale-gen \
     && echo LANG="en_US.UTF-8" > /etc/locale.conf \
-    && echo -e "alias ll='ls -las --color=auto' \nalias rm='rm -i' \nalias cp='cp -i'\n alias mv='mv -i'" >> /home/__DEFAULT_USER__/.bashrc
+    && echo "alias ll='ls -las --color=auto' \nalias rm='rm -i' \nalias cp='cp -i'\n alias mv='mv -i'" >> /home/__DEFAULT_USER__/.bashrc \
+    && sed -ri 's/^session\s+required\s+pam_loginuid.so$/session optional pam_loginuid.so/' /etc/pam.d/sshd
 
 # add files of configures & startup & ssh info
 ADD php56/. /etc/php56/.
@@ -117,7 +118,7 @@ ADD mysql/. /etc/mysql/.
 ADD ssh/. /etc/ssh/.
 ADD start   /etc/init.d/start
 RUN chmod a+x /etc/init.d/start \
-    && echo -e "__SSH_LOGIN_INFO__" > /etc/motd
+    && echo "__SSH_LOGIN_INFO__" > /etc/motd
 
 EXPOSE 22 80 3306
 
