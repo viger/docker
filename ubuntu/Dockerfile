@@ -20,6 +20,9 @@ RUN echo "nameserver 61.139.2.69\nnameserver 114.114.114.114" > /etc/resolv.conf
                        mariadb-server \
                        memcached \
                        redis-server \
+                       subversion \
+                       vim \
+                       htop \
                        libxml2-dev \
                        libcurl4-openssl-dev \
                        libssl-dev \
