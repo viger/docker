@@ -1,0 +1,16 @@
+#!/bin/bash
+
+start_crond() {
+    [ -z "$(ps aux | grep crond)" ] && /usr/sbin/crond;
+}
+
+start_lantern() {
+    ps aux | grep lantern_linux_amd64 | grep -v grep | awk '{print $1}' | xargs kill -9;
+    /root/lantern_linux_amd64 -addr 0.0.0.0:8787 -uiaddr 0.0.0.0:8788 2>&1 > /tmp/lantern.log &
+}
+
+
+start_crond
+start_lantern
+
+[ "$1" == "showlog" ] && tail -f /tmp/lantern.log;

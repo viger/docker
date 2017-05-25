@@ -1,0 +1,28 @@
+FROM alpine:latest
+MAINTAINER tom chen <viger@mchen.info>
+
+WORKDIR /root
+
+COPY lantern/* ./
+
+RUN apk add --no-cache libc6-compat \
+                       bash \
+                       libgcc \
+                       musl \
+                       dcron \
+                       # ca-certificates \
+    && mkdir /lib64/ \
+    && ln -s /lib/libc.so.6 /lib64/. \
+    && ln -s /lib/libpthread.so.0 /lib64/. \
+    && ln -s /lib/ld-linux-x86-64.so.2 /lib64/. \
+    && apk add --no-cache -f glibc-bin-2.25-r0.apk glibc-2.25-r0.apk --allow-untrusted \
+    && rm -f glibc-bin-2.25-r0.apk glibc-2.25-r0.apk \
+    && chmod a+x lantern_linux_amd64 \
+    && chmod a+x start \
+    && echo "1 */12 * * * /root/start" > /tmp/cron \
+    && crontab /tmp/cron \
+    && rm -f /tmp/cron
+
+EXPOSE 8787 8788
+
+ENTRYPOINT ["/root/start", "showlog"]
